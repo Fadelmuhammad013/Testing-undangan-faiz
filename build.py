@@ -1,60 +1,77 @@
-
 import json
+import re
 import shutil
+from html import escape
 from pathlib import Path
 
-source = Path("undangan-bugis-responsive")
-output = Path("dist")
-guest_file = source / "tamu.json"
+SOURCE = Path("undangan-bugis-responsive")
+OUTPUT = Path("dist")
+GUEST_FILE = SOURCE / "tamu.json"
 
-if not (source / "index.html").exists():
-    raise FileNotFoundError(f"index.html tidak ditemukan: {source}")
 
-if not guest_file.exists():
-    raise FileNotFoundError(f"tamu.json tidak ditemukan: {guest_file}")
+def validate_inputs():
+    if not (SOURCE / "index.html").is_file():
+        raise FileNotFoundError(
+            f"File {SOURCE / 'index.html'} tidak ditemukan. "
+            "Pastikan nama folder sumber sudah benar."
+        )
 
-guests = json.loads(guest_file.read_text(encoding="utf-8"))
+    if not GUEST_FILE.is_file():
+        raise FileNotFoundError(
+            f"File {GUEST_FILE} tidak ditemukan."
+        )
 
-if output.exists():
-    shutil.rmtree(output)
+    guests = json.loads(GUEST_FILE.read_text(encoding="utf-8"))
 
-output.mkdir(parents=True)
+    if not isinstance(guests, list):
+        raise ValueError("tamu.json harus berisi array JSON.")
 
-# Salin website utama
-for item in source.iterdir():
-    if item.name == "tamu.json":
-        continue
+    seen = set()
 
-    target = output / item.name
+    for guest in guests:
+        if not isinstance(guest, dict):
+            raise ValueError("Setiap tamu harus berupa objek JSON.")
 
-    if item.is_dir():
-        shutil.copytree(item, target)
-    else:
-        shutil.copy2(item, target)
+        slug = str(guest.get("slug", "")).strip().lower()
+        name = str(guest.get("nama", "")).strip()
 
-# Buat halaman personal untuk setiap tamu
-used_slugs = set()
+        if not slug or not name:
+            raise ValueError("Setiap tamu wajib memiliki slug dan nama.")
 
-for guest in guests:
-    slug = guest["slug"].strip().lower()
-    name = guest["nama"].strip()
+        if not re.fullmatch(r"[a-z0-9-]+", slug):
+            raise ValueError(f"Slug tidak valid: {slug}")
 
-    if not slug or any(
-        c not in "abcdefghijklmnopqrstuvwxyz0123456789-"
-        for c in slug
-    ):
-        raise ValueError(f"Slug tidak valid: {slug}")
+        if slug in seen:
+            raise ValueError(f"Slug duplikat: {slug}")
 
-    if slug in used_slugs:
-        raise ValueError(f"Slug duplikat: {slug}")
+        if slug == "assets":
+            raise ValueError("Slug 'assets' tidak boleh digunakan.")
 
-    used_slugs.add(slug)
+        seen.add(slug)
 
-    folder = output / slug
-    folder.mkdir(parents=True)
+    return guests
 
-    html = (source / "index.html").read_text(encoding="utf-8")
 
+def copy_site_files():
+    if OUTPUT.exists():
+        shutil.rmtree(OUTPUT)
+
+    OUTPUT.mkdir(parents=True)
+
+    for item in SOURCE.iterdir():
+        if item.name == "tamu.json":
+            continue
+
+        destination = OUTPUT / item.name
+
+        if item.is_dir():
+            shutil.copytree(item, destination)
+        else:
+            shutil.copy2(item, destination)
+
+
+def make_guest_html(original_html, name):
+    # Sesuaikan aset untuk halaman yang berada di /nama-tamu/
     replacements = [
         ('href="style.css"', 'href="../style.css"'),
         ("href='style.css'", "href='../style.css'"),
@@ -63,13 +80,63 @@ for guest in guests:
         ('src="assets/', 'src="../assets/'),
         ("src='assets/", "src='../assets/"),
         ('href="assets/', 'href="../assets/'),
-        ("href='assets/", "href='../assets/"),
+        ("href='assets/", "href='../assets/'),
     ]
+
+    html = original_html
 
     for old, new in replacements:
         html = html.replace(old, new)
 
-    (folder / "index.html").write_text(html, encoding="utf-8")
-    print(f"Halaman dibuat: /{slug}/ untuk {name}")
+    # Ganti teks di elemen nama tamu tanpa mengubah tag HTML-nya.
+    pattern = (
+        r'(<[^>]*\bid=["\']guest-name["\'][^>]*>)'
+        r'.*?'
+        r'(</[^>]+>)'
+    )
 
-print("Pembuatan halaman personal selesai.")
+    html, count = re.subn(
+        pattern,
+        lambda match: match.group(1) + escape(name) + match.group(2),
+        html,
+        count=1,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+    if count != 1:
+        raise ValueError(
+            'Elemen dengan id="guest-name" tidak ditemukan di index.html.'
+        )
+
+    return html
+
+
+def main():
+    guests = validate_inputs()
+    copy_site_files()
+
+    original_html = (
+        SOURCE / "index.html"
+    ).read_text(encoding="utf-8")
+
+    for guest in guests:
+        slug = guest["slug"].strip().lower()
+        name = guest["nama"].strip()
+
+        folder = OUTPUT / slug
+        folder.mkdir(parents=True, exist_ok=True)
+
+        guest_html = make_guest_html(original_html, name)
+
+        (folder / "index.html").write_text(
+            guest_html,
+            encoding="utf-8",
+        )
+
+        print(f"Berhasil membuat /{slug}/ untuk {name}")
+
+    print(f"Build selesai. Total halaman tamu: {len(guests)}")
+
+
+if __name__ == "__main__":
+    main()
