@@ -5,7 +5,7 @@ import shutil
 from html import escape
 from pathlib import Path
 
-SOURCE = Path("undangan-bugis-responsive")
+SOURCE = Path("undangan-bugis-responsive-v2")
 OUTPUT = Path("dist")
 GUEST_FILE = SOURCE / "tamu.json"
 
