@@ -1,41 +1,66 @@
 
 /* =========================================
-   FIX RESPONSIVE MOBILE - UNDANGAN FAIZ & DIVA
+   RESPONSIVE FIX — UNDANGAN FAIZ & DIVA
    ========================================= */
 
-/* Perhitungan ukuran elemen lebih konsisten */
+/* 1. Box sizing konsisten */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* Mencegah halaman melebar keluar layar */
+/* 2. Pengaturan dasar halaman */
 html {
   width: 100%;
-  overflow-x: clip;
   scroll-behavior: smooth;
+  scroll-padding-top: 16px;
 }
 
 body {
   width: 100%;
   min-width: 0;
   margin: 0;
-  overflow-x: clip;
 }
 
-/* Setiap section minimal setinggi layar */
+/* Mencegah elemen menyebabkan horizontal scroll */
+img,
+video,
+iframe,
+svg,
+canvas {
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+  font: inherit;
+}
+
+/* 3. Section / halaman */
 .page {
   position: relative;
   width: 100%;
+  min-width: 0;
   min-height: 100vh;
   min-height: 100svh;
   height: auto;
-  box-sizing: border-box;
+  scroll-margin-top: 16px;
 }
 
-/* Hero/halaman sampul */
+/* 4. Sampul utama */
 .hero {
+  position: relative;
+  width: 100%;
+  min-width: 0;
   min-height: 100vh;
   min-height: 100svh;
   height: auto;
@@ -43,46 +68,73 @@ body {
   flex-direction: column;
 }
 
-/* Konten tidak boleh keluar dari lebar layar */
+/* 5. Area konten */
 .section-content,
 .hero-content {
   width: 100%;
-  max-width: 100%;
   min-width: 0;
-  box-sizing: border-box;
-}
-
-/* Gambar dan elemen grid responsif */
-img {
   max-width: 100%;
-  height: auto;
 }
 
+/* Izinkan teks panjang membungkus */
+.section-content,
+.hero-content,
+.page h1,
+.page h2,
+.page h3,
+.page p {
+  overflow-wrap: anywhere;
+}
+
+/* 6. Grid responsif */
 .couple-grid,
 .gallery-grid,
 .countdown-grid,
 .event-grid {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.couple-grid > *,
+.gallery-grid > *,
+.countdown-grid > *,
+.event-grid > * {
+  min-width: 0;
+}
+
+/* 7. Form RSVP */
+.rsvp-form {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.rsvp-form input,
+.rsvp-form select,
+.rsvp-form textarea,
+.rsvp-form button {
+  width: 100%;
   min-width: 0;
   max-width: 100%;
 }
 
 /* =========================================
-   MOBILE
+   TABLET DAN MOBILE
    ========================================= */
 @media screen and (max-width: 768px) {
   html,
   body {
-    width: 100%;
     max-width: 100%;
   }
 
+  /* Hindari padding horizontal ganda pada section */
   .page {
-    width: 100%;
     min-height: 100vh;
     min-height: 100svh;
     height: auto;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .hero {
@@ -93,62 +145,101 @@ img {
   }
 
   .hero-content {
-    flex: 1;
+    flex: 1 0 auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 40px 22px;
+    width: 100%;
+    padding: 36px 22px;
     text-align: center;
   }
 
   .hero-bottom {
     margin-top: auto;
+    width: 100%;
   }
 
   .section-content {
+    width: 100%;
     margin-left: auto;
     margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
-  /* Elemen grid menyesuaikan layar HP */
+  /* Profil pasangan */
   .couple-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
 
+  /* Galeri foto */
   .gallery-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .gallery-large {
     grid-column: 1 / -1;
   }
 
+  /* Countdown */
   .countdown-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
+  /* Informasi acara */
   .event-grid {
     grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
   }
 
-  /* Form tidak melewati batas layar */
+  /* Tombol dan elemen interaktif */
+  .page button,
+  .page .button,
+  .page .next-link {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  /* RSVP */
   .rsvp-form,
   .rsvp-form input,
   .rsvp-form select,
   .rsvp-form textarea,
   .rsvp-form button {
     width: 100%;
-    max-width: 100%;
     min-width: 0;
+    max-width: 100%;
   }
 }
 
-/* HP dengan layar pendek */
+/* =========================================
+   HP DENGAN LAYAR PENDEK
+   ========================================= */
 @media screen and (max-width: 768px) and (max-height: 650px) {
   .hero-content {
-    padding-top: 28px;
-    padding-bottom: 28px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+}
+
+/* =========================================
+   AKSESIBILITAS
+   ========================================= */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
