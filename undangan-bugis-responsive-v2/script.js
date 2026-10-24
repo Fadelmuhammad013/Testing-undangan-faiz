@@ -12,24 +12,38 @@ const CONFIG = {
 };
 
 // ========================================
-// NAMA TAMU DARI LINK
-// Contoh: ?to=Fadel
-// ========================================
 
-const params = new URLSearchParams(window.location.search);
-const guest = params.get(CONFIG.guestNameParam);
+/* ========================================
+   NAMA TAMU DARI URL PERSONAL
+   Contoh: /fifi/ atau /faidah/
+======================================== */
 
-if (guest) {
-  const cleanGuest = guest
-    .replace(/[<>]/g, "")
-    .trim()
-    .slice(0, 80);
+const pathParts = window.location.pathname
+  .split("/")
+  .filter(Boolean);
 
-  document.getElementById("guest-name").textContent =
-    cleanGuest || "Tamu Undangan";
+const guestSlug = pathParts.length > 1
+  ? pathParts[pathParts.length - 1].toLowerCase()
+  : "";
 
-  document.getElementById("rsvp-name").value = cleanGuest;
+const guests = {
+  fifi: "Fifi",
+  faidah: "Faidah"
+};
+
+const guestName = guests[guestSlug] || "";
+
+const guestElement = document.getElementById("guest-name");
+const rsvpElement = document.getElementById("rsvp-name");
+
+if (guestElement) {
+  guestElement.textContent = guestName || "Tamu Undangan";
 }
+
+if (rsvpElement) {
+  rsvpElement.value = guestName;
+}
+
 
 // ========================================
 // MENU NAVIGASI HP
