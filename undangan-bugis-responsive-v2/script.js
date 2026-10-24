@@ -27,8 +27,9 @@ const pathParts = window.location.pathname
   .split("/")
   .filter(Boolean);
 
-const lastPathPart = (pathParts[pathParts.length - 1] || "")
-  .toLowerCase();
+const lastPathPart = (
+  pathParts[pathParts.length - 1] || ""
+).toLowerCase();
 
 const urlParams = new URLSearchParams(window.location.search);
 const guestFromQuery = urlParams.get(CONFIG.guestNameParam);
@@ -60,7 +61,7 @@ if (menuButton && navLinks) {
     menuButton.setAttribute("aria-expanded", String(isOpen));
   });
 
-  navLinks.querySelectorAll("a").forEach(link => {
+  navLinks.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", () => {
       navLinks.classList.remove("open");
       menuButton.setAttribute("aria-expanded", "false");
@@ -103,7 +104,7 @@ const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightbox-image");
 const lightboxClose = document.getElementById("lightbox-close");
 
-document.querySelectorAll(".gallery-item").forEach(item => {
+document.querySelectorAll(".gallery-item").forEach((item) => {
   item.addEventListener("click", () => {
     const img = item.querySelector("img");
 
@@ -138,14 +139,14 @@ if (lightboxClose) {
 }
 
 if (lightbox) {
-  lightbox.addEventListener("click", event => {
+  lightbox.addEventListener("click", (event) => {
     if (event.target === lightbox) {
       closeLightbox();
     }
   });
 }
 
-document.addEventListener("keydown", event => {
+document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeLightbox();
   }
@@ -157,7 +158,7 @@ document.addEventListener("keydown", event => {
 const rsvpForm = document.getElementById("rsvp-form");
 
 if (rsvpForm) {
-  rsvpForm.addEventListener("submit", event => {
+  rsvpForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const form = new FormData(rsvpForm);
@@ -223,12 +224,50 @@ if (copyAccountButton) {
 }
 
 // ========================================
+// ANIMASI TRANSISI SECTION
+// Menggunakan class .reveal yang ada di CSS
+// ========================================
+(() => {
+  const revealElements = document.querySelectorAll(".reveal");
 
-/* =========================
+  if (!revealElements.length) return;
 
-/* =========================
-   BACKSOUND UNDANGAN
-========================= */
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  if (
+    reduceMotion ||
+    !("IntersectionObserver" in window)
+  ) {
+    revealElements.forEach((element) => {
+      element.classList.add("is-visible");
+    });
+    return;
+  }
+
+  const revealObserver = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    {
+      threshold: 0.12
+    }
+  );
+
+  revealElements.forEach((element) => {
+    revealObserver.observe(element);
+  });
+})();
+
+// ========================================
+// BACKSOUND UNDANGAN
+// ========================================
 (() => {
   const music = document.getElementById("background-music");
 
@@ -240,6 +279,12 @@ if (copyAccountButton) {
   music.preload = "auto";
 
   let isPlaying = false;
+
+  function removeListeners() {
+    document.removeEventListener("click", startMusic);
+    document.removeEventListener("touchstart", startMusic);
+    document.removeEventListener("keydown", startMusic);
+  }
 
   function startMusic() {
     if (isPlaying) return;
@@ -259,22 +304,12 @@ if (copyAccountButton) {
     }
   }
 
-  function removeListeners() {
-    document.removeEventListener("click", startMusic);
-    document.removeEventListener("touchstart", startMusic);
-    document.removeEventListener("keydown", startMusic);
-  }
-
-  // Coba autoplay ketika script dijalankan.
+  // Coba autoplay; browser mungkin memerlukan interaksi pengguna.
   startMusic();
 
-  // Jika ditolak browser, coba lagi saat interaksi pertama.
   document.addEventListener("click", startMusic);
   document.addEventListener("touchstart", startMusic);
   document.addEventListener("keydown", startMusic);
 
-  // Coba kembali jika halaman selesai dimuat.
   window.addEventListener("load", startMusic, { once: true });
 })();
-
-
