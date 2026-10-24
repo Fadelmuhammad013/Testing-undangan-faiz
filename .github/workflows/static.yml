@@ -1,43 +1,118 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+
+name: Deploy Wedding Invitation
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  # Single deploy job since we're just deploying
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Generate guest pages
+        run: |
+          python - <<'PY'
+          import json
+          import shutil
+          from pathlib import Path
+
+          source = Path("undangan-bugis-responsive")
+          output = Path("dist")
+
+          if not (source / "index.html").exists():
+              raise FileNotFoundError("index.html tidak ditemukan di folder undangan-bugis-responsive")
+
+          guest_file = source / "tamu.json"
+          if not guest_file.exists():
+              raise FileNotFoundError("tamu.json belum dibuat di folder undangan-bugis-responsive")
+
+          guests = json.loads(guest_file.read_text(encoding="utf-8"))
+
+          if not isinstance(guests, list):
+              raise ValueError("tamu.json harus berisi daftar tamu berbentuk array")
+
+          output.mkdir(exist_ok=True)
+
+          # Salin file utama dan aset satu kali.
+          for item in source.iterdir():
+              if item.name == "tamu.json":
+                  continue
+
+              target = output / item.name
+
+              if item.is_dir():
+                  shutil.copytree(item, target, dirs_exist_ok=True)
+              else:
+                  shutil.copy2(item, target)
+
+          # Buat halaman personal untuk setiap tamu.
+          used_slugs = set()
+
+          for guest in guests:
+              slug = guest["slug"].strip().lower()
+              name = guest["nama"].strip()
+
+              if not slug or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789-" for c in slug):
+                  raise ValueError(f"Slug tidak valid: {slug}")
+
+              if slug in used_slugs:
+                  raise ValueError(f"Slug duplikat: {slug}")
+
+              used_slugs.add(slug)
+
+              folder = output / slug
+              folder.mkdir(parents=True, exist_ok=True)
+
+              html = (source / "index.html").read_text(encoding="utf-8")
+
+              # File CSS, JS, dan aset menggunakan file bersama di root.
+              html = html.replace('href="style.css"', 'href="../style.css"')
+              html = html.replace("href='style.css'", "href='../style.css'")
+              html = html.replace('src="script.js"', 'src="../script.js"')
+              html = html.replace("src='script.js'", "src='../script.js'")
+              html = html.replace('src="assets/', 'src="../assets/')
+              html = html.replace("src='assets/", "src='../assets/")
+              html = html.replace('href="assets/', 'href="../assets/')
+              html = html.replace("href='assets/", "href='../assets/')
+
+              (folder / "index.html").write_text(html, encoding="utf-8")
+
+              print(f"Halaman dibuat: /{slug}/ untuk {name}")
+
+          print("Selesai membuat halaman personal.")
+          PY
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
   deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: ./undangan-bugis-responsive-v2
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4
