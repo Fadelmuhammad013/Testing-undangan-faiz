@@ -3,7 +3,8 @@ name: Deploy Wedding Invitation
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -26,13 +27,25 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Check Python
+        run: python --version
+
       - name: Generate guest pages
         run: python build.py
+
+      - name: Verify generated pages
+        run: |
+          test -f dist/index.html
+          test -f dist/fifi/index.html
+          test -f dist/faidah/index.html
+          grep -q 'Fifi' dist/fifi/index.html
+          grep -q 'Faidah' dist/faidah/index.html
+          echo "Semua halaman testing berhasil dibuat."
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: dist
 
   deploy:
     runs-on: ubuntu-latest
