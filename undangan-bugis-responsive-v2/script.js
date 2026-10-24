@@ -228,15 +228,29 @@ if (copyAccountButton) {
 // KONTROL MUSIK
 // Masih berupa placeholder, belum memutar audio.
 // ========================================
-const musicToggle = document.getElementById("music-toggle");
-const musicLabel = document.getElementById("music-label");
 
-if (musicToggle) {
-  musicToggle.addEventListener("click", () => {
-    if (musicLabel) {
-      musicLabel.textContent = "Tambahkan musik.mp3";
+/* ========================================
+   BACKSOUND OTOMATIS TANPA TOMBOL
+   Musik mulai saat Buka Undangan diklik
+======================================== */
+
+const backgroundMusic = document.getElementById("background-music");
+
+const openInvitationButton = document.querySelector(
+  '.hero-content a[href="#pembuka"]'
+);
+
+if (backgroundMusic && openInvitationButton) {
+  // Putar musik saat tamu membuka undangan
+  openInvitationButton.addEventListener("click", async () => {
+    try {
+      backgroundMusic.loop = true;
+      backgroundMusic.volume = 0.7;
+
+      await backgroundMusic.play();
+    } catch (error) {
+      console.warn("Backsound gagal diputar:", error);
     }
-
-    musicToggle.setAttribute("aria-pressed", "false");
   });
 }
+
