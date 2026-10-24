@@ -1,9 +1,9 @@
 
-// ========================================
-// KONFIGURASI UNDANGAN
-// Ubah data ini sesuai acara sebenarnya.
-// ========================================
+"use strict";
 
+// ========================================
+// KONFIGURASI UTAMA
+// ========================================
 const CONFIG = {
   weddingDate: "2026-12-20T08:00:00+08:00",
   whatsappNumber: "6285165089335",
@@ -12,124 +12,84 @@ const CONFIG = {
 };
 
 // ========================================
+// PERSONALISASI NAMA TAMU
+// Mendukung URL /fifi/ dan /faidah/
+// ========================================
+const guestNames = {
+  fifi: "Fifi",
+  faidah: "Faidah"
+};
 
-/* ========================================
-   NAMA TAMU DARI URL PERSONAL
-   Contoh: /fifi/ atau /faidah/
-======================================== */
+const guestElement = document.getElementById("guest-name");
+const rsvpNameInput = document.getElementById("rsvp-name");
 
 const pathParts = window.location.pathname
   .split("/")
   .filter(Boolean);
 
-const guestSlug = pathParts.length > 1
-  ? pathParts[pathParts.length - 1].toLowerCase()
-  : "";
+const lastPathPart = (pathParts[pathParts.length - 1] || "")
+  .toLowerCase();
 
-const guests = {
-  fifi: "Fifi",
-  faidah: "Faidah"
-};
+const urlParams = new URLSearchParams(window.location.search);
+const guestFromQuery = urlParams.get(CONFIG.guestNameParam);
 
-const guestName = guests[guestSlug] || "";
+const guestName =
+  (guestFromQuery || "").replace(/[<>]/g, "").trim().slice(0, 80) ||
+  guestNames[lastPathPart] ||
+  "";
 
-const guestElement = document.getElementById("guest-name");
-const rsvpElement = document.getElementById("rsvp-name");
+if (guestName) {
+  if (guestElement) {
+    guestElement.textContent = guestName;
+  }
 
-if (guestElement) {
-  guestElement.textContent = guestName || "Tamu Undangan";
+  if (rsvpNameInput && !rsvpNameInput.value) {
+    rsvpNameInput.value = guestName;
+  }
 }
 
-if (rsvpElement) {
-  rsvpElement.value = guestName;
-}
-
-
 // ========================================
-// MENU NAVIGASI HP
+// NAVIGASI MOBILE
 // ========================================
-
 const menuButton = document.getElementById("menu-button");
 const navLinks = document.getElementById("nav-links");
 
-menuButton.addEventListener("click", () => {
-  const isOpen = navLinks.classList.toggle("open");
-  menuButton.setAttribute("aria-expanded", String(isOpen));
-});
-
-navLinks.querySelectorAll("a").forEach(link => {
-  link.addEventListener("click", () => {
-    navLinks.classList.remove("open");
-    menuButton.setAttribute("aria-expanded", "false");
+if (menuButton && navLinks) {
+  menuButton.addEventListener("click", () => {
+    const isOpen = navLinks.classList.toggle("open");
+    menuButton.setAttribute("aria-expanded", String(isOpen));
   });
-});
 
-// ========================================
-// ANIMASI SAAT SCROLL
-// ========================================
-
-// Elemen halaman muncul perlahan ketika terlihat.
-const animatedElements = document.querySelectorAll(
-  ".section-heading, .section-content > p, " +
-  ".couple-grid, .event-card, .countdown-grid, " +
-  ".gallery-grid, .timeline, .rsvp-form, " +
-  ".gift-card, .footer-ornament, .footer h2"
-);
-
-animatedElements.forEach(element => {
-  element.classList.add("reveal");
-});
-
-if ("IntersectionObserver" in window) {
-  const revealObserver = new IntersectionObserver(
-    entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    },
-    {
-      threshold: 0.15
-    }
-  );
-
-  animatedElements.forEach(element => {
-    revealObserver.observe(element);
-  });
-} else {
-  animatedElements.forEach(element => {
-    element.classList.add("is-visible");
+  navLinks.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => {
+      navLinks.classList.remove("open");
+      menuButton.setAttribute("aria-expanded", "false");
+    });
   });
 }
 
 // ========================================
-// COUNTDOWN PERNIKAHAN
+// COUNTDOWN
 // ========================================
-
 function updateCountdown() {
   const target = new Date(CONFIG.weddingDate).getTime();
   const diff = target - Date.now();
 
-  let values;
-
-  if (Number.isNaN(target)) {
-    values = ["--", "--", "--", "--"];
-  } else if (diff <= 0) {
-    values = [0, 0, 0, 0];
-  } else {
-    values = [
-      Math.floor(diff / 86400000),
-      Math.floor((diff % 86400000) / 3600000),
-      Math.floor((diff % 3600000) / 60000),
-      Math.floor((diff % 60000) / 1000)
-    ];
-  }
+  const values = diff > 0
+    ? [
+        Math.floor(diff / 86400000),
+        Math.floor((diff % 86400000) / 3600000),
+        Math.floor((diff % 3600000) / 60000),
+        Math.floor((diff % 60000) / 1000)
+      ]
+    : [0, 0, 0, 0];
 
   ["days", "hours", "minutes", "seconds"].forEach((id, index) => {
-    document.getElementById(id).textContent =
-      String(values[index]).padStart(2, "0");
+    const element = document.getElementById(id);
+
+    if (element) {
+      element.textContent = String(values[index]).padStart(2, "0");
+    }
   });
 }
 
@@ -137,9 +97,8 @@ updateCountdown();
 setInterval(updateCountdown, 1000);
 
 // ========================================
-// GALERI FOTO DIPERBESAR
+// GALERI FOTO / LIGHTBOX
 // ========================================
-
 const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightbox-image");
 const lightboxClose = document.getElementById("lightbox-close");
@@ -149,6 +108,8 @@ document.querySelectorAll(".gallery-item").forEach(item => {
     const img = item.querySelector("img");
 
     if (
+      !lightbox ||
+      !lightboxImage ||
       !img ||
       img.style.display === "none" ||
       !img.complete ||
@@ -165,18 +126,24 @@ document.querySelectorAll(".gallery-item").forEach(item => {
 });
 
 function closeLightbox() {
+  if (!lightbox || !lightboxImage) return;
+
   lightbox.hidden = true;
   lightboxImage.src = "";
   document.body.style.overflow = "";
 }
 
-lightboxClose.addEventListener("click", closeLightbox);
+if (lightboxClose) {
+  lightboxClose.addEventListener("click", closeLightbox);
+}
 
-lightbox.addEventListener("click", event => {
-  if (event.target === lightbox) {
-    closeLightbox();
-  }
-});
+if (lightbox) {
+  lightbox.addEventListener("click", event => {
+    if (event.target === lightbox) {
+      closeLightbox();
+    }
+  });
+}
 
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") {
@@ -187,37 +154,89 @@ document.addEventListener("keydown", event => {
 // ========================================
 // RSVP KE WHATSAPP
 // ========================================
+const rsvpForm = document.getElementById("rsvp-form");
 
-document.getElementById("rsvp-form").addEventListener("submit", event => {
-  event.preventDefault();
+if (rsvpForm) {
+  rsvpForm.addEventListener("submit", event => {
+    event.preventDefault();
 
-  const form = new FormData(event.currentTarget);
+    const form = new FormData(rsvpForm);
 
-  const message = [
-    "Assalamu'alaikum, konfirmasi undangan pernikahan Faiz & Diva.",
-    `Nama: ${form.get("name")}`,
-    `Kehadiran: ${form.get("status")}`,
-    `Jumlah tamu: ${form.get("count")}`,
-    `Ucapan: ${form.get("message") || "-"}`
-  ].join("\n");
+    // Nomor tujuan diambil dari konfigurasi utama.
+    const whatsappNumber = String(CONFIG.whatsappNumber || "")
+      .replace(/\D/g, "");
 
-  const url =
-    `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(message)}`;
+    if (!whatsappNumber) {
+      alert("Nomor WhatsApp belum dikonfigurasi.");
+      return;
+    }
 
-  window.open(url, "_blank", "noopener,noreferrer");
-});
+    const name = String(form.get("name") || "").trim();
+    const status = String(form.get("status") || "-");
+    const count = String(form.get("count") || "1");
+    const wishes = String(form.get("message") || "").trim();
+
+    if (!name) {
+      alert("Silakan isi nama lengkap terlebih dahulu.");
+      return;
+    }
+
+    const message = [
+      "Assalamu'alaikum, konfirmasi undangan pernikahan Faiz & Diva.",
+      "",
+      `Nama: ${name}`,
+      `Kehadiran: ${status}`,
+      `Jumlah tamu: ${count}`,
+      `Ucapan: ${wishes || "-"}`
+    ].join("\n");
+
+    const url =
+      "https://wa.me/" +
+      whatsappNumber +
+      "?text=" +
+      encodeURIComponent(message);
+
+    window.open(url, "_blank");
+  });
+}
 
 // ========================================
 // SALIN NOMOR REKENING
 // ========================================
+const copyAccountButton = document.getElementById("copy-account");
 
-document.getElementById("copy-account").addEventListener("click", async event => {
-  const button = event.currentTarget;
+if (copyAccountButton) {
+  copyAccountButton.addEventListener("click", async () => {
+    const accountNumber = String(CONFIG.accountNumber || "");
 
-  try {
-    await navigator.clipboard.writeText(CONFIG.accountNumber);
-    button.textContent = "Tersalin ✓";
-  } catch {
-    button.textContent = CONFIG.accountNumber;
-  }
-});
+    if (!accountNumber) {
+      alert("Nomor rekening belum dikonfigurasi.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(accountNumber);
+      copyAccountButton.textContent = "Tersalin ✓";
+    } catch (error) {
+      // Fallback jika clipboard tidak tersedia.
+      window.prompt("Salin nomor rekening berikut:", accountNumber);
+    }
+  });
+}
+
+// ========================================
+// KONTROL MUSIK
+// Masih berupa placeholder, belum memutar audio.
+// ========================================
+const musicToggle = document.getElementById("music-toggle");
+const musicLabel = document.getElementById("music-label");
+
+if (musicToggle) {
+  musicToggle.addEventListener("click", () => {
+    if (musicLabel) {
+      musicLabel.textContent = "Tambahkan musik.mp3";
+    }
+
+    musicToggle.setAttribute("aria-pressed", "false");
+  });
+}
