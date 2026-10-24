@@ -44,25 +44,20 @@ jobs:
               raise FileNotFoundError("tamu.json belum dibuat di folder undangan-bugis-responsive")
 
           guests = json.loads(guest_file.read_text(encoding="utf-8"))
-
-          if not isinstance(guests, list):
-              raise ValueError("tamu.json harus berisi daftar tamu berbentuk array")
-
           output.mkdir(exist_ok=True)
 
-          # Salin file utama dan aset satu kali.
+          # Salin website utama
           for item in source.iterdir():
               if item.name == "tamu.json":
                   continue
 
               target = output / item.name
-
               if item.is_dir():
                   shutil.copytree(item, target, dirs_exist_ok=True)
               else:
                   shutil.copy2(item, target)
 
-          # Buat halaman personal untuk setiap tamu.
+          # Buat halaman personal setiap tamu
           used_slugs = set()
 
           for guest in guests:
@@ -76,28 +71,30 @@ jobs:
                   raise ValueError(f"Slug duplikat: {slug}")
 
               used_slugs.add(slug)
-
               folder = output / slug
               folder.mkdir(parents=True, exist_ok=True)
 
               html = (source / "index.html").read_text(encoding="utf-8")
 
-              # File CSS, JS, dan aset menggunakan file bersama di root.
-              html = html.replace('href="style.css"', 'href="../style.css"')
-              html = html.replace("href='style.css'", "href='../style.css'")
-              html = html.replace('src="script.js"', 'src="../script.js"')
-              html = html.replace("src='script.js'", "src='../script.js'")
-              html = html.replace('src="assets/', 'src="../assets/')
-              html = html.replace("src='assets/", "src='../assets/")
-              html = html.replace('href="assets/', 'href="../assets/')
-              html = html.replace("href='assets/", "href='../assets/')
+              replacements = [
+                  ('href="style.css"', 'href="../style.css"'),
+                  ("href='style.css'", "href='../style.css'"),
+                  ('src="script.js"', 'src="../script.js"'),
+                  ("src='script.js'", "src='../script.js'"),
+                  ('src="assets/', 'src="../assets/'),
+                  ("src='assets/", "src='../assets/"),
+                  ('href="assets/', 'href="../assets/'),
+                  ("href='assets/", "href='../assets/'),
+              ]
+
+              for old, new in replacements:
+                  html = html.replace(old, new)
 
               (folder / "index.html").write_text(html, encoding="utf-8")
 
               print(f"Halaman dibuat: /{slug}/ untuk {name}")
 
           print("Selesai membuat halaman personal.")
-          PY
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
