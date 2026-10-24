@@ -162,7 +162,6 @@ if (rsvpForm) {
 
     const form = new FormData(rsvpForm);
 
-    // Nomor tujuan diambil dari konfigurasi utama.
     const whatsappNumber = String(CONFIG.whatsappNumber || "")
       .replace(/\D/g, "");
 
@@ -218,39 +217,64 @@ if (copyAccountButton) {
       await navigator.clipboard.writeText(accountNumber);
       copyAccountButton.textContent = "Tersalin ✓";
     } catch (error) {
-      // Fallback jika clipboard tidak tersedia.
       window.prompt("Salin nomor rekening berikut:", accountNumber);
     }
   });
 }
 
 // ========================================
-// KONTROL MUSIK
-// Masih berupa placeholder, belum memutar audio.
-// ========================================
 
-/* ========================================
-   BACKSOUND OTOMATIS TANPA TOMBOL
-   Musik mulai saat Buka Undangan diklik
-======================================== */
+/* =========================
 
-const backgroundMusic = document.getElementById("background-music");
+/* =========================
+   BACKSOUND UNDANGAN
+========================= */
+(() => {
+  const music = document.getElementById("background-music");
 
-const openInvitationButton = document.querySelector(
-  '.hero-content a[href="#pembuka"]'
-);
+  if (!music) return;
 
-if (backgroundMusic && openInvitationButton) {
-  // Putar musik saat tamu membuka undangan
-  openInvitationButton.addEventListener("click", async () => {
-    try {
-      backgroundMusic.loop = true;
-      backgroundMusic.volume = 0.7;
+  music.loop = true;
+  music.volume = 0.7;
+  music.autoplay = true;
+  music.preload = "auto";
 
-      await backgroundMusic.play();
-    } catch (error) {
-      console.warn("Backsound gagal diputar:", error);
+  let isPlaying = false;
+
+  function startMusic() {
+    if (isPlaying) return;
+
+    const playPromise = music.play();
+
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          isPlaying = true;
+          removeListeners();
+          console.log("Backsound berhasil diputar.");
+        })
+        .catch((error) => {
+          console.log("Autoplay belum diizinkan:", error.name);
+        });
     }
-  });
-}
+  }
+
+  function removeListeners() {
+    document.removeEventListener("click", startMusic);
+    document.removeEventListener("touchstart", startMusic);
+    document.removeEventListener("keydown", startMusic);
+  }
+
+  // Coba autoplay ketika script dijalankan.
+  startMusic();
+
+  // Jika ditolak browser, coba lagi saat interaksi pertama.
+  document.addEventListener("click", startMusic);
+  document.addEventListener("touchstart", startMusic);
+  document.addEventListener("keydown", startMusic);
+
+  // Coba kembali jika halaman selesai dimuat.
+  window.addEventListener("load", startMusic, { once: true });
+})();
+
 
