@@ -6,7 +6,7 @@
 
 const CONFIG = {
   weddingDate: "2026-12-20T08:00:00+08:00",
-  whatsappNumber: "6281234567890",
+  whatsappNumber: "6285165089335",
   accountNumber: "000000000000",
   guestNameParam: "to"
 };
