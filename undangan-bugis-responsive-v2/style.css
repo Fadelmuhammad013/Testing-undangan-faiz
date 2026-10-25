@@ -178,52 +178,6 @@ img {
     linear-gradient(0deg, rgba(18,15,13,.85), transparent 65%);
 }
 
-.top-nav {
-  width: min(1180px, calc(100% - 44px));
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 0;
-  color: var(--gold-light);
-  position: relative;
-  z-index: 5;
-}
-
-.brand {
-  font-family: var(--serif);
-  font-size: 24px;
-  letter-spacing: .12em;
-}
-
-.brand span {
-  color: var(--gold);
-  font-size: 16px;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  font-size: 11px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.nav-links a:hover {
-  color: var(--gold);
-}
-
-.menu-button {
-  display: none;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--gold-light);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-}
-
 .hero-content {
   width: min(1180px, calc(100% - 44px));
   margin: auto;
@@ -913,33 +867,6 @@ img {
     padding: 0;
   }
 
-  .top-nav {
-    width: calc(100% - 36px);
-    padding: 15px 0;
-  }
-
-  .menu-button {
-    display: block;
-  }
-
-  .nav-links {
-    display: none;
-    position: absolute;
-    top: 62px;
-    left: 0;
-    right: 0;
-    padding: 16px;
-    background: rgba(25,20,16,.97);
-    border: 1px solid var(--line);
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .nav-links.open {
-    display: flex;
-  }
-
   .hero-content {
     width: calc(100% - 36px);
     padding: 24px 0 55px;
@@ -1080,5 +1007,124 @@ img {
 
   .copy-button {
     margin-left: 0;
+  }
+}
+
+
+/* ========================================
+   UCAPAN & DOA — ELEGANT WEDDING THEME
+======================================== */
+
+#wishes-section #wishes-count {
+  color: #d5b47a;
+  font-size: 14px;
+  margin: 18px 0 20px;
+}
+
+/* Area scroll ucapan */
+#wishes-list {
+  width: min(100% - 32px, 680px);
+  height: 380px;
+  margin: 0 auto;
+  padding: 8px 14px 8px 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #a78349 #30251f;
+  text-align: left;
+  border-top: 1px solid rgba(213, 180, 122, 0.25);
+  border-bottom: 1px solid rgba(213, 180, 122, 0.25);
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar untuk Chrome, Edge, dan browser berbasis Chromium */
+#wishes-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#wishes-list::-webkit-scrollbar-track {
+  background: #30251f;
+  border-radius: 10px;
+}
+
+#wishes-list::-webkit-scrollbar-thumb {
+  background: #a78349;
+  border-radius: 10px;
+}
+
+/* Kartu setiap ucapan */
+#wishes-list .wish-card {
+  position: relative;
+  margin: 0 0 14px;
+  padding: 20px 22px;
+  background: linear-gradient(
+    135deg,
+    rgba(76, 57, 43, 0.72),
+    rgba(47, 36, 29, 0.92)
+  );
+  border: 1px solid rgba(213, 180, 122, 0.28);
+  border-radius: 10px;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.12);
+  overflow-wrap: anywhere;
+  transition: border-color 0.2s ease,
+              transform 0.2s ease;
+}
+
+#wishes-list .wish-card:hover {
+  border-color: rgba(213, 180, 122, 0.65);
+  transform: translateY(-2px);
+}
+
+/* Nama tamu */
+#wishes-list .wish-card h3 {
+  margin: 0 0 12px;
+  color: #f4dfb7;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* Pesan ucapan */
+#wishes-list .wish-card p {
+  margin: 0 0 16px;
+  color: #f4eee6;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+/* Status kehadiran */
+#wishes-list .wish-card small {
+  display: inline-block;
+  padding: 5px 10px;
+  color: #dfc18b;
+  background: rgba(213, 180, 122, 0.09);
+  border: 1px solid rgba(213, 180, 122, 0.22);
+  border-radius: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Tampilan HP */
+@media (max-width: 600px) {
+  #wishes-list {
+    width: calc(100% - 24px);
+    height: 340px;
+    padding: 8px;
+  }
+
+  #wishes-list .wish-card {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  #wishes-list .wish-card h3 {
+    font-size: 15px;
+  }
+
+  #wishes-list .wish-card p {
+    font-size: 13px;
   }
 }
