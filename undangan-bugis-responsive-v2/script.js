@@ -1,12 +1,21 @@
+import { db, wishesCollection } from "./firebase.js";
 
-"use strict";
+import {
+  addDoc,
+  getDocs,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 // ========================================
 // KONFIGURASI UTAMA
 // ========================================
 const CONFIG = {
   weddingDate: "2026-12-20T08:00:00+08:00",
-  whatsappNumber: "6285165089335",
+  whatsappNumber: "6285298823047",
   accountNumber: "000000000000",
   guestNameParam: "to"
 };
@@ -46,26 +55,6 @@ if (guestName) {
   if (rsvpNameInput && !rsvpNameInput.value) {
     rsvpNameInput.value = guestName;
   }
-}
-
-// ========================================
-// NAVIGASI MOBILE
-// ========================================
-const menuButton = document.getElementById("menu-button");
-const navLinks = document.getElementById("nav-links");
-
-if (menuButton && navLinks) {
-  menuButton.addEventListener("click", () => {
-    const isOpen = navLinks.classList.toggle("open");
-    menuButton.setAttribute("aria-expanded", String(isOpen));
-  });
-
-  navLinks.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", () => {
-      navLinks.classList.remove("open");
-      menuButton.setAttribute("aria-expanded", "false");
-    });
-  });
 }
 
 // ========================================
@@ -152,12 +141,14 @@ document.addEventListener("keydown", event => {
 });
 
 // ========================================
-// RSVP KE WHATSAPP
-// ========================================
+
+ // ========================================
+ // RSVP KE WHATSAPP + FIREBASE
+ // ========================================
 const rsvpForm = document.getElementById("rsvp-form");
 
 if (rsvpForm) {
-  rsvpForm.addEventListener("submit", event => {
+  rsvpForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const form = new FormData(rsvpForm);
@@ -180,6 +171,7 @@ if (rsvpForm) {
       return;
     }
 
+    // Siapkan pesan WhatsApp
     const message = [
       "Assalamu'alaikum, konfirmasi undangan pernikahan Faiz & Diva.",
       "",
@@ -195,9 +187,48 @@ if (rsvpForm) {
       "?text=" +
       encodeURIComponent(message);
 
-    window.open(url, "_blank");
+    // Buka tab WhatsApp sebelum proses async
+    // agar tidak mudah diblokir oleh browser
+    const whatsappWindow = window.open("about:blank", "_blank");
+
+    try {
+      // Simpan RSVP dan ucapan ke Firestore
+      await addDoc(wishesCollection, {
+        name: name,
+        status: status,
+        count: count,
+        message: wishes,
+        createdAt: serverTimestamp()
+      });
+
+      console.log("RSVP berhasil disimpan ke Firebase.");
+
+      if (whatsappWindow) {
+        whatsappWindow.location.href = url;
+      } else {
+        window.location.href = url;
+      }
+
+      rsvpForm.reset();
+
+    } catch (error) {
+      console.error("Gagal menyimpan RSVP ke Firebase:", error);
+
+      // WhatsApp tetap bisa digunakan meskipun penyimpanan gagal
+      if (whatsappWindow) {
+        whatsappWindow.location.href = url;
+      } else {
+        window.location.href = url;
+      }
+
+      alert(
+        "RSVP gagal disimpan ke database, tetapi WhatsApp tetap dibuka. " +
+        "Silakan coba lagi nanti atau hubungi pengelola undangan."
+      );
+    }
   });
 }
+
 
 // ========================================
 // SALIN NOMOR REKENING
@@ -265,6 +296,67 @@ if (copyAccountButton) {
     document.removeEventListener("keydown", startMusic);
   }
 
+  
+/* ========================================
+   UCAPAN & DOA DARI FIREBASE
+======================================== */
+
+const wishesList = document.getElementById("wishes-list");
+const wishesCount = document.getElementById("wishes-count");
+
+const wishesQuery = query(
+  wishesCollection,
+  orderBy("createdAt", "desc"),
+  limit(50)
+);
+
+if (wishesList) {
+  onSnapshot(
+    wishesQuery,
+    (snapshot) => {
+      wishesList.replaceChildren();
+
+      if (wishesCount) {
+        wishesCount.textContent =
+          `${snapshot.size} ucapan`;
+      }
+
+      if (snapshot.empty) {
+        wishesList.textContent =
+          "Belum ada ucapan. Jadilah yang pertama memberikan doa!";
+        return;
+      }
+
+      snapshot.forEach((documentSnapshot) => {
+        const wish = documentSnapshot.data();
+
+        const card = document.createElement("article");
+        card.className = "wish-card";
+
+        const name = document.createElement("h3");
+        name.textContent = wish.name || "Tamu";
+
+        const message = document.createElement("p");
+        message.textContent = wish.message || "Tidak ada ucapan.";
+
+        const status = document.createElement("small");
+        status.textContent =
+          `Kehadiran: ${wish.status || "-"}`;
+
+        card.append(name, message, status);
+        wishesList.appendChild(card);
+      });
+    },
+    (error) => {
+      console.error("Gagal memuat ucapan:", error);
+
+      if (wishesCount) {
+        wishesCount.textContent = "Ucapan belum dapat dimuat.";
+      }
+    }
+  );
+}
+
   // Coba autoplay ketika script dijalankan.
   startMusic();
 
@@ -276,5 +368,3 @@ if (copyAccountButton) {
   // Coba kembali jika halaman selesai dimuat.
   window.addEventListener("load", startMusic, { once: true });
 })();
-
-
