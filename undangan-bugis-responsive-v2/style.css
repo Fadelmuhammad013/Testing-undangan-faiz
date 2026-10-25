@@ -20,8 +20,9 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
   scroll-padding: 0;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -55,6 +56,7 @@ img {
 /* SETIAP SECTION = SATU LAYAR */
 
 .page {
+  box-sizing: border-box;
   min-height: 100vh;
   min-height: 100svh;
   width: 100%;
@@ -63,9 +65,10 @@ img {
   flex-direction: column;
   justify-content: center;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
-  overflow: hidden;
-  padding: 48px 22px;
+  scroll-snap-stop: normal;
+  overflow-x: clip;
+  overflow-y: visible;
+  padding: clamp(28px, 5vh, 48px) clamp(14px, 4vw, 22px);
 }
 
 .section-content {
@@ -860,7 +863,7 @@ img {
 
 @media (max-width: 760px) {
   .page {
-    padding: 38px 18px;
+    padding: 28px 18px;
   }
 
   .hero {
@@ -946,7 +949,7 @@ img {
 
 @media (max-width: 390px) {
   .page {
-    padding: 28px 14px;
+    padding: 22px 14px;
   }
 
   .hero {
@@ -1023,13 +1026,16 @@ img {
 
 /* Area scroll ucapan */
 #wishes-list {
-  width: min(100% - 32px, 680px);
-  height: 380px;
+  width: min(100%, 680px);
+  height: min(380px, 48svh);
+  min-height: 190px;
   margin: 0 auto;
   padding: 8px 14px 8px 8px;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   scrollbar-width: thin;
   scrollbar-color: #a78349 #30251f;
   text-align: left;
@@ -1110,8 +1116,9 @@ img {
 /* Tampilan HP */
 @media (max-width: 600px) {
   #wishes-list {
-    width: calc(100% - 24px);
-    height: 340px;
+    width: 100%;
+    height: min(340px, 42svh);
+    min-height: 170px;
     padding: 8px;
   }
 
@@ -1126,5 +1133,9 @@ img {
 
   #wishes-list .wish-card p {
     font-size: 13px;
+  }
+
+  #wishes-list .wish-card:hover {
+    transform: none;
   }
 }
